@@ -4,10 +4,12 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
+  ./setup-project.sh
   ./setup-project.sh --project <project_name>
   ./setup-project.sh <project_name>
 
 Example:
+  ./setup-project.sh
   ./setup-project.sh --project svc-itasset-golang
   ./setup-project.sh backend_itasset
 EOF
@@ -19,12 +21,21 @@ README_FILE="${ROOT_DIR}/README.md"
 
 NEW_MODULE=""
 NEW_PROJECT=""
-POSITIONAL_PROJECT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project)
-      NEW_PROJECT="${2:-}"
+      if [[ $# -lt 2 || -z "${2:-}" ]]; then
+        echo "missing value for --project" >&2
+        usage
+        exit 1
+      fi
+      if [[ -n "${NEW_PROJECT}" ]]; then
+        echo "project name already provided" >&2
+        usage
+        exit 1
+      fi
+      NEW_PROJECT="${2}"
       shift 2
       ;;
     -h|--help)
@@ -38,28 +49,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       if [[ -n "${NEW_PROJECT}" ]]; then
-        echo "project name already provided via --project" >&2
-        usage
-        exit 1
-      fi
-      if [[ -n "${POSITIONAL_PROJECT}" ]]; then
         echo "only one project name is allowed" >&2
         usage
         exit 1
       fi
-      POSITIONAL_PROJECT="$1"
+      NEW_PROJECT="$1"
       shift
       ;;
   esac
 done
 
-if [[ -z "${NEW_PROJECT}" && -n "${POSITIONAL_PROJECT}" ]]; then
-  NEW_PROJECT="${POSITIONAL_PROJECT}"
+if [[ -z "${NEW_PROJECT}" ]]; then
+  read -r -p "Nama project: " NEW_PROJECT
 fi
 
 if [[ -z "${NEW_PROJECT}" ]]; then
   echo "project name is required" >&2
-  usage
   exit 1
 fi
 
@@ -80,6 +85,17 @@ if [[ -z "${OLD_MODULE}" ]]; then
   echo "failed to read current module from go.mod" >&2
   exit 1
 fi
+
+normalize_local_import_prefixes() {
+  while IFS= read -r -d '' gofile; do
+    NEW_MODULE="${NEW_MODULE}" perl -0pi -e '
+      s/"[^"\n]+\/(domain|utils|entity|valueobject)(\/[^"\n]+)"/"$ENV{NEW_MODULE}\/$1$2"/g;
+      s/"[^"\n]+\/(domain|utils|entity|valueobject)"/"$ENV{NEW_MODULE}\/$1"/g;
+    ' "${gofile}"
+  done < <(
+    find "${ROOT_DIR}" -type f -name "*.go" -not -path "*/.git/*" -print0
+  )
+}
 
 tmp_go_mod="${GO_MOD_FILE}.tmp"
 awk -v m="${NEW_MODULE}" '
@@ -103,36 +119,13 @@ if [[ "${OLD_MODULE}" != "${NEW_MODULE}" ]]; then
     OLD_MODULE="${OLD_MODULE}" NEW_MODULE="${NEW_MODULE}" perl -0pi -e 's/\Q$ENV{OLD_MODULE}\E/$ENV{NEW_MODULE}/g' "${file}"
   done < <(
     find "${ROOT_DIR}" -type f \
-      \( -name "*.go" -o -name "*.md" -o -name "*.sh" -o -name "go.mod" \) \
+      \( -name "*.go" -o -name "*.mod" -o -name "*.sum" -o -name "*.md" -o -name "*.sh" -o -name "*.env*" \) \
       -not -path "*/.git/*" \
       -print0
   )
 fi
 
-# Normalize any stale local import prefixes in Go files, e.g. copied boilerplate imports.
-prefixes_tmp="$(mktemp)"
-while IFS= read -r -d '' file; do
-  perl -nE '
-    while (/"([^"]+)\/(?:domain|utils|entity|valueobject)(?:\/[^"]*)?"/g) {
-      say $1;
-    }
-  ' "${file}" >> "${prefixes_tmp}"
-done < <(
-  find "${ROOT_DIR}" -type f -name "*.go" -not -path "*/.git/*" -print0
-)
-
-if [[ -s "${prefixes_tmp}" ]]; then
-  sort -u "${prefixes_tmp}" | while IFS= read -r prefix; do
-    if [[ -n "${prefix}" && "${prefix}" != "${NEW_MODULE}" ]]; then
-      while IFS= read -r -d '' gofile; do
-        OLD_PREFIX="${prefix}" NEW_MODULE="${NEW_MODULE}" perl -0pi -e 's/\Q$ENV{OLD_PREFIX}\E/$ENV{NEW_MODULE}/g' "${gofile}"
-      done < <(
-        find "${ROOT_DIR}" -type f -name "*.go" -not -path "*/.git/*" -print0
-      )
-    fi
-  done
-fi
-rm -f "${prefixes_tmp}"
+normalize_local_import_prefixes
 
 if [[ -f "${README_FILE}" ]]; then
   tmp_readme="${README_FILE}.tmp"
@@ -146,13 +139,20 @@ if [[ -f "${README_FILE}" ]]; then
   mv "${tmp_readme}" "${README_FILE}"
 fi
 
+deps_status="skipped"
 if command -v go >/dev/null 2>&1; then
-  (cd "${ROOT_DIR}" && go mod tidy)
+  if (cd "${ROOT_DIR}" && go mod tidy); then
+    deps_status="go mod tidy"
+  else
+    deps_status="go mod tidy failed (run manually)"
+    echo "warning: go mod tidy failed. run 'go mod tidy' manually when network is available." >&2
+  fi
 else
+  deps_status="go not found (skipped)"
   echo "warning: 'go' command not found, skipped dependency installation" >&2
 fi
 
 echo "Project setup updated:"
 echo "  module : ${OLD_MODULE} -> ${NEW_MODULE}"
 echo "  project: ${NEW_PROJECT}"
-echo "  deps   : go mod tidy"
+echo "  deps   : ${deps_status}"
