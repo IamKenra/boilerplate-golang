@@ -1,8 +1,8 @@
 package masterdata
 
 import (
-	"boilerplate-golang/utils/database"
-	"boilerplate-golang/valueobject"
+	"svc-boilerplate-fiber-golang/utils/database"
+	"svc-boilerplate-fiber-golang/valueobject"
 )
 
 type PostgreRepository interface {

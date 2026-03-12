@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"boilerplate-golang/utils/database"
-	"boilerplate-golang/valueobject"
+	"svc-boilerplate-fiber-golang/utils/database"
+	"svc-boilerplate-fiber-golang/valueobject"
 )
 
 func (db *postgresMasterdataRepository) GetAll(param map[string]interface{}) (response []valueobject.Masterdata, err error) {

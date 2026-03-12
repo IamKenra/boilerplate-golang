@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"boilerplate-golang/valueobject"
+	"svc-boilerplate-fiber-golang/valueobject"
 )
 
 func (masterdata masterdataUsecase) GetAll(param map[string]interface{}) (response []valueobject.Masterdata, err error) {

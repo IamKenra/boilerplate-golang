@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"boilerplate-golang/valueobject"
+	"svc-boilerplate-fiber-golang/valueobject"
 
 	"github.com/golang-jwt/jwt/v5"
 )

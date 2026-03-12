@@ -2,7 +2,7 @@ package repository
 
 import (
 	"log"
-	"boilerplate-golang/utils/database"
+	"svc-boilerplate-fiber-golang/utils/database"
 
 	"github.com/bwmarrin/snowflake"
 )

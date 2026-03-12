@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"boilerplate-golang/utils/storage"
+	"svc-boilerplate-fiber-golang/utils/storage"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"boilerplate-golang/utils/storage"
+	"svc-boilerplate-fiber-golang/utils/storage"
 )
 
 func GetDatabaseDSN() string {

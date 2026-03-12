@@ -3,8 +3,8 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"boilerplate-golang/domain/masterdata"
-	"boilerplate-golang/utils/middleware"
+	"svc-boilerplate-fiber-golang/domain/masterdata"
+	"svc-boilerplate-fiber-golang/utils/middleware"
 )
 
 type HttpMasterdataHandler struct {

@@ -61,4 +61,3 @@ func BuildTable(name string, columns []string, rows [][]string) string {
 
 	return b.String()
 }
-

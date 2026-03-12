@@ -1,46 +1,53 @@
 package middleware
 
 import (
-	"context"
-	"net/http"
+	"os"
 	"strings"
+	"svc-boilerplate-fiber-golang/utils/logger"
+	"svc-boilerplate-fiber-golang/utils/response"
 
-	"boilerplate-golang/utils/jwt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type contextKey string
-
-const UserContextKey contextKey = "user"
-
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-
+func JWTProtected() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-			return
+			logger.Error("Authorization header is missing")
+			return response.Unauthorized(c, "Authorization header is missing")
+		}
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			logger.Error("Authorization header format is invalid")
+			return response.Unauthorized(c, "Authorization header format is invalid")
+		}
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		secret := os.Getenv("JWT_SECRET")
+		if strings.TrimSpace(secret) == "" {
+			logger.Error("JWT_SECRET is not configured")
+			return response.Unauthorized(c, "Token verifier is not configured")
 		}
 
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
-			return
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fiber.ErrUnauthorized
+			}
+			return []byte(secret), nil
+		})
+
+		if err != nil || !token.Valid {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid or expired JWT",
+			})
 		}
 
-		tokenString := tokenParts[1]
-		claims, err := jwt.ValidateAccessToken(tokenString)
-		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			return
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return response.Unauthorized(c, "Invalid token claims")
 		}
+		c.Locals("uuid", claims["uuid"])
+		c.Locals("username", claims["username"])
 
-		// Add user claims to request context
-		ctx := context.WithValue(r.Context(), UserContextKey, claims)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func GetUserFromContext(r *http.Request) (*jwt.Claims, bool) {
-	claims, ok := r.Context().Value(UserContextKey).(*jwt.Claims)
-	return claims, ok
+		return c.Next()
+	}
 }

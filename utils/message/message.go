@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"boilerplate-golang/utils/slices"
+	"strings"
+	"svc-boilerplate-fiber-golang/utils/slices"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,9 +18,27 @@ const BAD_REQUEST_STATUS = "Input tidak valid"
 const SUCCESS_UPDATE_STATUS = "Berhasil melakukan pembaharuan data"
 const SUCCESS_INSERT_STATUS = "Berhasil melakukan penambahan data"
 
+func isReleaseMode() bool {
+	for _, key := range []string{"APP_ENV", "GO_ENV", "GIN_MODE"} {
+		if strings.EqualFold(os.Getenv(key), RELEASE) {
+			return true
+		}
+	}
+	return false
+}
+
 func measureLength(data interface{}) int {
+	if data == nil {
+		return 0
+	}
 	v := reflect.ValueOf(data)
+	if !v.IsValid() {
+		return 0
+	}
 	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return 0
+		}
 		v = v.Elem()
 	}
 	switch v.Kind() {
@@ -32,6 +51,9 @@ func measureLength(data interface{}) int {
 }
 
 func castNilSliceToArray(data interface{}) interface{} {
+	if data == nil {
+		return []interface{}{}
+	}
 	if reflect.ValueOf(data).Kind() == reflect.Slice {
 		if reflect.ValueOf(data).Len() < 1 {
 			return []interface{}{}
@@ -49,7 +71,7 @@ func ReturnOk(ctx *fiber.Ctx, data interface{}, param interface{}) {
 	if requestSource == PUBLIC {
 		slices.RemoveIDFields(&data)
 	}
-	if os.Getenv("GIN_MODE") == RELEASE {
+	if isReleaseMode() {
 		param = nil
 	}
 	ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -97,7 +119,7 @@ func ReturnBadRequest(ctx *fiber.Ctx, errorMessage interface{}) {
 	} else {
 		log.Print("error: ", ctx.OriginalURL(), " - ", errorMessage, " - ", string(rawBody))
 	}
-	if os.Getenv("GIN_MODE") == RELEASE {
+	if isReleaseMode() {
 		errorMessage = nil
 	}
 	ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -113,7 +135,7 @@ func ReturnInternalServerError(ctx *fiber.Ctx, errorMessage ...string) {
 	} else {
 		log.Print("error: ", ctx.OriginalURL(), " - ", errorMessage, " - ", string(rawBody))
 	}
-	if os.Getenv("GIN_MODE") == RELEASE {
+	if isReleaseMode() {
 		errorMessage = nil
 	}
 	ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -141,7 +163,7 @@ func ReturnSuccessUpdate(ctx *fiber.Ctx) {
 }
 
 func ReturnNotFound(ctx *fiber.Ctx, message string) {
-	if os.Getenv("GIN_MODE") == RELEASE {
+	if isReleaseMode() {
 		message = ""
 	}
 	ctx.Status(http.StatusNotFound).JSON(fiber.Map{

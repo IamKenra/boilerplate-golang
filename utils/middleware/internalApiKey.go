@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"os"
-	"boilerplate-golang/utils/response"
+	"svc-boilerplate-fiber-golang/utils/response"
 
 	"github.com/gofiber/fiber/v2"
 )

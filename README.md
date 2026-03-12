@@ -1,6 +1,6 @@
-# boilerplate-golang
+# svc-boilerplate-fiber-golang
 
-Go Fiber boilerplate with layered domain structure:
+Go Fiber service boilerplate with layered domain structure:
 
 - `domain/<domain>/delivery/http`
 - `domain/<domain>/usecase`
@@ -9,24 +9,36 @@ Go Fiber boilerplate with layered domain structure:
 
 Default sample domain: `domain/masterdata`.
 
-## Initial Setup
-Set project name (also used as Go module/import root).
-By default, script will ask interactively:
+## Quick Start
 
 ```bash
-./setup-project.sh
+cp .env.example .env
+go run main.go
 ```
 
-You can still pass it directly:
+## Required Environment
 
-```bash
-./setup-project.sh --project svc-itasset-golang
-./setup-project.sh backend_itasset
-```
+Minimum variables for startup:
 
-The script updates module/import references and tries `go mod tidy`.
+- `PORT`
+- `DB_DRIVERNAME`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USERNAME`
+
+Recommended:
+
+- `DB_PASSWORD`
+- `APP_ENV` (`development` or `release`)
+- `CORS_ALLOW_ORIGINS`
+- `JWT_SECRET` (if using protected routes)
+- `INTERNAL_API_KEY` (if using internal API key middleware)
+
+Use `.env.example` as the source of truth for all available variables.
 
 ## Add Domain (Automation)
+
 Create a new domain:
 
 ```bash
@@ -59,16 +71,7 @@ The script also wires `main.go` with flow:
 - `uc := New<Domain>Usecase(repo)`
 - `NewHttp<Domain>Handler(uc, app)`
 
-## Run
-
-```bash
-export PORT=3000
-go run main.go
-```
-
 ## Health Check
-
-Example for masterdata domain:
 
 ```bash
 curl --location 'http://localhost:3000/api/v1/masterdata/health'

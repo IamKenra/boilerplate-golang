@@ -1,4 +1,4 @@
-module boilerplate-golang
+module svc-boilerplate-fiber-golang
 
 go 1.24.0
 

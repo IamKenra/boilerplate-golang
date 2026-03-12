@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"boilerplate-golang/domain/masterdata"
 	"database/sql"
+	"svc-boilerplate-fiber-golang/domain/masterdata"
 )
 
 const POSTGRE = "postgre"

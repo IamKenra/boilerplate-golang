@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"boilerplate-golang/domain/masterdata"
+	"svc-boilerplate-fiber-golang/domain/masterdata"
 )
 
 /*

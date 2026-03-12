@@ -1,7 +1,7 @@
 package http
 
 import (
-	"boilerplate-golang/utils/message"
+	"svc-boilerplate-fiber-golang/utils/message"
 
 	"github.com/gofiber/fiber/v2"
 )

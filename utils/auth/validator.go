@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"boilerplate-golang/utils/jwt"
+	"svc-boilerplate-fiber-golang/utils/jwt"
 
 	"github.com/gofiber/fiber/v2"
 )

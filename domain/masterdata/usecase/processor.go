@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"boilerplate-golang/utils/database"
-	"boilerplate-golang/valueobject"
+	"svc-boilerplate-fiber-golang/utils/database"
+	"svc-boilerplate-fiber-golang/valueobject"
 )
 
 func (masterdata masterdataUsecase) ProcessStore(payload valueobject.MasterdataPayloadInsert) (queryConfig []database.QueryConfig, err error) {

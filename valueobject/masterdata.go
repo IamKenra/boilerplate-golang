@@ -1,6 +1,6 @@
 package valueobject
 
-import "boilerplate-golang/entity"
+import "svc-boilerplate-fiber-golang/entity"
 
 type Masterdata struct {
 	entity.Masterdata
