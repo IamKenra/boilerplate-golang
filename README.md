@@ -21,7 +21,7 @@ go run main.go
 Minimum variables for startup:
 
 - `PORT`
-- `DB_DRIVERNAME`
+- `DB_DIALECT` (`postgres` or `mysql`)
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
@@ -77,13 +77,9 @@ The script also wires `main.go` with flow:
 curl --location 'http://localhost:3000/api/v1/masterdata/health'
 ```
 
-## Optional Oracle Build
+## Database
 
-Oracle support is behind a build tag because `godror` needs CGO and Oracle Instant Client:
-
-```bash
-go build -tags oracle ./...
-```
+Database access uses GORM with PostgreSQL and MySQL support. Set `DB_DIALECT=postgres` or `DB_DIALECT=mysql` in `.env`.
 
 ## Media Utilities
 

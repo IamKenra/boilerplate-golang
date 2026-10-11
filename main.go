@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -15,6 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 
 	_masterdataHttpDeliver "svc-boilerplate-fiber-golang/domain/masterdata/delivery/http"
 	_masterdataRepository "svc-boilerplate-fiber-golang/domain/masterdata/repository"
@@ -35,7 +35,9 @@ func main() {
 	app.Use(middleware.CORSConfig())
 
 	postgreDB := ConnectPostgre()
-	defer postgreDB.Close()
+	if sqlDB, err := postgreDB.DB(); err == nil {
+		defer sqlDB.Close()
+	}
 
 	masterdataRepo := _masterdataRepository.NewPostgresRepository(postgreDB)
 	masterdataUC := _masterdataUsecase.NewMasterdataUsecase(masterdataRepo)
@@ -62,12 +64,10 @@ func main() {
 	}
 }
 
-func ConnectPostgre() (postgre *sql.DB) {
-	postgre, err := database.SetupPostgreDatabaseConnection()
-
+func ConnectPostgre() *gorm.DB {
+	postgre, err := database.SetupDatabaseConnection()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	return
+	return postgre
 }

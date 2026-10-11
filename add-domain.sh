@@ -66,18 +66,10 @@ write_file "${DOMAIN_DIR}/usecase/app.go" "package usecase
 
 import \"${MODULE_PATH}/domain/${DOMAIN}\"
 
-/*
-*
-the struct of usecases
-*/
 type ${DOMAIN}Usecase struct {
 	postgreRepository ${DOMAIN}.PostgreRepository
 }
 
-/*
-*
-the initiator function for usecase
-*/
 func New${TITLE_DOMAIN}Usecase(postgres ${DOMAIN}.PostgreRepository) ${DOMAIN}.Usecase {
 	return &${DOMAIN}Usecase{
 		postgreRepository: postgres,
@@ -109,35 +101,27 @@ write_file "${DOMAIN_DIR}/usecase/core-api.go" "package usecase
 
 write_file "${DOMAIN_DIR}/usecase/processor.go" "package usecase
 
-// Place query builder processors in this file."
+// Place request-to-repository mapping helpers in this file."
 
 write_file "${DOMAIN_DIR}/repository/define.go" "package repository
 
 import (
-	\"database/sql\"
-
 	\"${MODULE_PATH}/domain/${DOMAIN}\"
+
+	\"gorm.io/gorm\"
 )
 
-const POSTGRE = \"postgre\"
-
-const SELECT_DISTINCT = \"select-distinct\"
-const SELECT = \"select\"
-const INSERT = \"insert\"
-const UPDATE = \"update\"
-const DELETE = \"delete\"
-
 type postgres${TITLE_DOMAIN}Repository struct {
-	sqlDB *sql.DB
+	db *gorm.DB
 }
 
-func NewPostgresRepository(db *sql.DB) ${DOMAIN}.PostgreRepository {
-	return &postgres${TITLE_DOMAIN}Repository{db}
+func NewPostgresRepository(db *gorm.DB) ${DOMAIN}.PostgreRepository {
+	return &postgres${TITLE_DOMAIN}Repository{db: db}
 }"
 
 write_file "${DOMAIN_DIR}/repository/postgre-core.go" "package repository
 
-// Place domain-specific PostgreSQL query methods in this file."
+// Place domain-specific GORM query methods in this file."
 
 write_file "${DOMAIN_DIR}/repository/postgre-utils.go" "package repository
 
@@ -168,7 +152,11 @@ func init() {
 }
 
 func (db *postgres${TITLE_DOMAIN}Repository) Health() error {
-	return db.sqlDB.Ping()
+	sqlDB, err := db.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Ping()
 }
 
 func (db *postgres${TITLE_DOMAIN}Repository) GenerateID() (uint64, error) {

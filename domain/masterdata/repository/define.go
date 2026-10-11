@@ -1,25 +1,17 @@
 package repository
 
 import (
-	"database/sql"
 	"svc-boilerplate-fiber-golang/domain/masterdata"
+
+	"gorm.io/gorm"
 )
 
-const POSTGRE = "postgre"
-
-const SELECT_DISTINCT = "select-distinct"
-const SELECT = "select"
-const INSERT = "insert"
-const UPDATE = "update"
-const DELETE = "delete"
-
-// example for database configuration
 const POSTGRE_TABLE = "masterdata"
 
 type postgresMasterdataRepository struct {
-	sqlDB *sql.DB
+	db *gorm.DB
 }
 
-func NewPostgresRepository(db *sql.DB) masterdata.PostgreRepository {
-	return &postgresMasterdataRepository{db}
+func NewPostgresRepository(db *gorm.DB) masterdata.PostgreRepository {
+	return &postgresMasterdataRepository{db: db}
 }

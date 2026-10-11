@@ -1,60 +1,51 @@
 package usecase
 
 import (
+	"svc-boilerplate-fiber-golang/domain/masterdata"
 	"svc-boilerplate-fiber-golang/valueobject"
 )
 
-func (masterdata masterdataUsecase) GetAll(param map[string]interface{}) (response []valueobject.Masterdata, err error) {
-	response, err = masterdata.postgreRepository.GetAll(param)
-	return
+func (masterdataUC masterdataUsecase) GetAll(filter masterdata.MasterdataFilter) (response []valueobject.Masterdata, err error) {
+	return masterdataUC.postgreRepository.GetAll(filter)
 }
 
-func (masterdata masterdataUsecase) GetOne(param map[string]interface{}) (response valueobject.Masterdata, err error) {
-	response, err = masterdata.postgreRepository.GetOne(param)
-	return
+func (masterdataUC masterdataUsecase) GetOne(uuid string) (response valueobject.Masterdata, err error) {
+	return masterdataUC.postgreRepository.GetOne(uuid)
 }
 
-func (masterdata masterdataUsecase) Count(param map[string]interface{}) (response valueobject.Masterdata, err error) {
-	response, err = masterdata.postgreRepository.Count(param)
-	return
+func (masterdataUC masterdataUsecase) Count(filter masterdata.MasterdataFilter) (response int64, err error) {
+	return masterdataUC.postgreRepository.Count(filter)
 }
 
-func (masterdata masterdataUsecase) Store(payload valueobject.MasterdataPayloadInsert) (valueobject.MasterdataPayloadInsert, error) {
+func (masterdataUC masterdataUsecase) Store(payload valueobject.MasterdataPayloadInsert) (valueobject.MasterdataPayloadInsert, error) {
 	for i := range payload.Data {
-		payload.Data[i].ID, _ = masterdata.postgreRepository.GenerateID()
-		payload.Data[i].UUID, _ = masterdata.postgreRepository.GenerateUUID()
+		id, err := masterdataUC.postgreRepository.GenerateID()
+		if err != nil {
+			return payload, err
+		}
+		uuid, err := masterdataUC.postgreRepository.GenerateUUID()
+		if err != nil {
+			return payload, err
+		}
+		payload.Data[i].ID = id
+		payload.Data[i].UUID = uuid
 		payload.Data[i].UserInput = payload.User
 	}
 
-	queryConfig, err := masterdata.ProcessStore(payload)
-
-	if err != nil {
-		return payload, err
-	}
-
-	return payload, masterdata.postgreRepository.Exec(queryConfig...)
+	return payload, masterdataUC.postgreRepository.Store(payload.Data)
 }
 
-func (masterdata masterdataUsecase) Update(payload valueobject.MasterdataPayloadUpdate) (err error) {
+func (masterdataUC masterdataUsecase) Update(payload valueobject.MasterdataPayloadUpdate) error {
 	for i := range payload.Data {
 		payload.Data[i].Body.UserUpdate = payload.User
 	}
-
-	queryConfig, err := masterdata.ProcessUpdate(payload)
-
-	if err != nil {
-		return
-	}
-
-	return masterdata.postgreRepository.Exec(queryConfig...)
+	return masterdataUC.postgreRepository.Update(payload.Data)
 }
 
-func (masterdata masterdataUsecase) Delete(payload valueobject.MasterdataPayloadDelete) (err error) {
-	queryConfig, err := masterdata.ProcessDelete(payload)
-
-	if err != nil {
-		return
+func (masterdataUC masterdataUsecase) Delete(payload valueobject.MasterdataPayloadDelete) error {
+	uuids := make([]string, 0, len(payload.Param))
+	for _, item := range payload.Param {
+		uuids = append(uuids, item.UUID)
 	}
-
-	return masterdata.postgreRepository.Exec(queryConfig...)
+	return masterdataUC.postgreRepository.Delete(uuids)
 }

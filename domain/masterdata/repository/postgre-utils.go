@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"svc-boilerplate-fiber-golang/utils/database"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/google/uuid"
@@ -26,18 +25,19 @@ func init() {
 		log.Fatalf("Failed to create snowflake node: %v", err)
 	}
 }
+
 func (db *postgresMasterdataRepository) GenerateID() (uint64, error) {
 	return uint64(node.Generate().Int64()), nil
 }
 
 func (db *postgresMasterdataRepository) Health() error {
-	return db.sqlDB.Ping()
+	sqlDB, err := db.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Ping()
 }
 
 func (db *postgresMasterdataRepository) GenerateUUID() (string, error) {
 	return uuid.NewString(), nil
-}
-
-func (db *postgresMasterdataRepository) Exec(queryConfig ...database.QueryConfig) (err error) {
-	return database.ExecTransaction(db.sqlDB, queryConfig...)
 }
