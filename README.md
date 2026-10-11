@@ -32,7 +32,7 @@ Recommended:
 - `DB_PASSWORD`
 - `APP_ENV` (`development` or `release`)
 - `CORS_ALLOW_ORIGINS`
-- `JWT_SECRET` (if using protected routes)
+- `JWT_SECRET`
 - `INTERNAL_API_KEY` (if using internal API key middleware)
 
 Use `.env.example` as the source of truth for all available variables.
@@ -76,6 +76,18 @@ The script also wires `main.go` with flow:
 ```bash
 curl --location 'http://localhost:3000/api/v1/masterdata/health'
 ```
+
+## Optional Oracle Build
+
+Oracle support is behind a build tag because `godror` needs CGO and Oracle Instant Client:
+
+```bash
+go build -tags oracle ./...
+```
+
+## Media Utilities
+
+`utils/media` shells out to `cwebp` and `dwebp`; install those binaries before using WebP conversion.
 
 ## Verify Build
 

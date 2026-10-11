@@ -13,14 +13,8 @@ const INSERT = "insert"
 const UPDATE = "update"
 const DELETE = "delete"
 
-// exaple for database configuration
+// example for database configuration
 const POSTGRE_TABLE = "masterdata"
-
-const POSTGRE_JENIS_TABLE = "masterdata.jenis"
-const POSTGRE_STATUS_TABLE = "masterdata.status"
-const POSTGRE_LOKASI_TABLE = "masterdata.lokasi"
-const POSTGRE_VENDOR_TABLE = "masterdata.vendor"
-const POSTGRE_DEPARTEMEN_TABLE = "masterdata.departemen"
 
 type postgresMasterdataRepository struct {
 	sqlDB *sql.DB

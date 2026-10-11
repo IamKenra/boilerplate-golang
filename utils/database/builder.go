@@ -49,6 +49,8 @@ type QueryConfig struct {
 	counter int
 }
 
+// QueryBuilder trusts map keys as SQL identifiers/operators (columns, ORDER_BY, GROUP_BY).
+// Pass only whitelisted keys; never pass raw user input as keys.
 func (cfg *QueryConfig) QueryBuilder() (err error) {
 	cfg.counter = 1
 	if cfg.Action == "select" {
@@ -84,7 +86,7 @@ func (cfg *QueryConfig) QueryBuilder() (err error) {
 	}
 
 	// For debuging logical error
-	if os.Getenv("MYSQL_DEBUG") == "true" {
+	if os.Getenv("DB_DEBUG") == "true" {
 		log.Println(cfg.Result.Query, cfg.Result.Value)
 	}
 	return

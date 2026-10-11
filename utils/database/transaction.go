@@ -35,6 +35,5 @@ func ExecTransaction(db *sql.DB, query ...QueryConfig) (err error) {
 			return fmt.Errorf("query: %s | value: %s | message: %s", builder.Result.Query, builder.Result.Value, err.Error())
 		}
 	}
-	tx.Commit()
-	return
+	return tx.Commit()
 }

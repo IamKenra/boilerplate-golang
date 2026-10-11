@@ -10,8 +10,6 @@ import (
 
 func TestReturnBadRequest_RedactsDeveloperMessageInRelease(t *testing.T) {
 	t.Setenv("APP_ENV", "release")
-	t.Setenv("GO_ENV", "")
-	t.Setenv("GIN_MODE", "")
 
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -37,8 +35,6 @@ func TestReturnBadRequest_RedactsDeveloperMessageInRelease(t *testing.T) {
 
 func TestReturnBadRequest_ExposesDeveloperMessageInDevelopment(t *testing.T) {
 	t.Setenv("APP_ENV", "development")
-	t.Setenv("GO_ENV", "")
-	t.Setenv("GIN_MODE", "")
 
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {

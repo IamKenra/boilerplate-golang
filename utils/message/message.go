@@ -19,12 +19,7 @@ const SUCCESS_UPDATE_STATUS = "Berhasil melakukan pembaharuan data"
 const SUCCESS_INSERT_STATUS = "Berhasil melakukan penambahan data"
 
 func isReleaseMode() bool {
-	for _, key := range []string{"APP_ENV", "GO_ENV", "GIN_MODE"} {
-		if strings.EqualFold(os.Getenv(key), RELEASE) {
-			return true
-		}
-	}
-	return false
+	return strings.EqualFold(os.Getenv("APP_ENV"), RELEASE)
 }
 
 func measureLength(data interface{}) int {

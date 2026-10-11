@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"svc-boilerplate-fiber-golang/valueobject"
@@ -24,6 +25,9 @@ type Claims struct {
 
 func GenerateAccessToken(user valueobject.User) (string, int64, error) {
 	secret := getJWTSecret()
+	if secret == "" {
+		return "", 0, errors.New("JWT_SECRET is not configured")
+	}
 	duration := getAccessTokenDuration()
 	expirationTime := time.Now().Add(duration)
 
@@ -54,6 +58,9 @@ func GenerateRefreshTokenExpiry() time.Time {
 
 func ValidateAccessToken(tokenString string) (*Claims, error) {
 	secret := getJWTSecret()
+	if secret == "" {
+		return nil, errors.New("JWT_SECRET is not configured")
+	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -74,11 +81,7 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 }
 
 func getJWTSecret() string {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "default-secret-for-development-only"
-	}
-	return secret
+	return strings.TrimSpace(os.Getenv("JWT_SECRET"))
 }
 
 func getAccessTokenDuration() time.Duration {

@@ -1,3 +1,5 @@
+//go:build oracle
+
 package database
 
 import (

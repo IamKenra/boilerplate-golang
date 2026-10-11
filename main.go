@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 	"svc-boilerplate-fiber-golang/utils/database"
 	"svc-boilerplate-fiber-golang/utils/middleware"
+	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq" // PostgreSQL driver
 
 	_masterdataHttpDeliver "svc-boilerplate-fiber-golang/domain/masterdata/delivery/http"
 	_masterdataRepository "svc-boilerplate-fiber-golang/domain/masterdata/repository"
@@ -19,11 +23,19 @@ import (
 
 func main() {
 	_ = godotenv.Load()
+	if strings.TrimSpace(os.Getenv("JWT_SECRET")) == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	app := fiber.New()
+	app.Use(recover.New())
 	app.Use(middleware.CORSConfig())
 
 	postgreDB := ConnectPostgre()
+	defer postgreDB.Close()
 
 	masterdataRepo := _masterdataRepository.NewPostgresRepository(postgreDB)
 	masterdataUC := _masterdataUsecase.NewMasterdataUsecase(masterdataRepo)
@@ -34,7 +46,20 @@ func main() {
 		port = "3000"
 	}
 
-	log.Fatal(app.Listen(":" + port))
+	listenErr := make(chan error, 1)
+	go func() {
+		listenErr <- app.Listen(":" + port)
+	}()
+
+	select {
+	case <-ctx.Done():
+		stop()
+		if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
+			log.Printf("server shutdown failed: %v", err)
+		}
+	case err := <-listenErr:
+		log.Fatal(err)
+	}
 }
 
 func ConnectPostgre() (postgre *sql.DB) {
@@ -45,8 +70,4 @@ func ConnectPostgre() (postgre *sql.DB) {
 	}
 
 	return
-}
-
-type metricsJobUsecase interface {
-	RunHourlyMetricsJob() error
 }
